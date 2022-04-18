@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>hqchart+python的指标编辑</title>
+    <!--[if IE]>
+      <script src="https://www.zhangxinxu.com/wordpress/2018/08/js-base64-atob-btoa-encode-decode/base64-polyfill.js"></script>
+    <![endif]-->
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      html,body{
+        font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+        width: 100%;
+        height: 100%;
+        font-size: 14px;
+      }
+      #app{
+        width: 100%;
+        height: 100%;
+      }
+      ul,ol{
+        list-style: none;
+      }
+      /*修改element ui 按钮样式 start*/
+      .el-button.el-button--primary {
+          background-color: #eb6100;
+          box-shadow: -1px 6px 10px 0px rgb(235 97 0 / 26%);
+          border-radius: 4px;
+          border: solid 1px #de432d;
+      }
+      .el-button.el-button--primary:focus, .el-button.el-button--primary:hover {
+        color: #fff;
+        border-color: #de432d;
+        background-color: #eb6100;
+        opacity: 0.8;
+      }
+      .el-button.el-button--primary.is-disabled, 
+      .el-button.el-button--primary.is-disabled:active, 
+      .el-button.el-button--primary.is-disabled:focus, 
+      .el-button.el-button--primary.is-disabled:hover {
+          color: #FFF;
+          background-color: #eb6100;
+          border-color: #de432d;
+          opacity: 0.5;
+      }
+      /*修改element ui 按钮样式 end*/
+
+      /*修改element ui 表格样式 start*/
+      .el-table thead.is-group th.el-table__cell {
+          background: #f9f9f9!important;
+      }
+      .el-table .selecting-row{
+        background-color: #fdefe5;
+      }
+      /* .el-table--enable-row-hover .el-table__body tr:hover>td.el-table__cell {
+          background-color: #fdefe5 !important;
+      } */
+      /*修改element ui 表格样式 end*/
+
+      /*修改element ui 表格样式 start*/
+      .el-checkbox__inner:hover {
+          border-color: #eb6100 !important;
+      }
+      .el-checkbox__input.is-checked .el-checkbox__inner, .el-checkbox__input.is-indeterminate .el-checkbox__inner {
+        background-color: #eb6100 !important;
+        border-color: #eb6100 !important;
+      }
+      .el-checkbox__input.is-checked+.el-checkbox__label {
+          color: #eb6100 !important;
+      }
+      .el-checkbox__input.is-focus .el-checkbox__inner{
+        border-color: #eb6100 !important;
+      }
+      .el-checkbox__input.is-disabled+span.el-checkbox__label .redText {
+        color: red;
+        /* cursor: not-allowed; */
+      }
+      /*修改element ui 表格样式 end*/
+
+      /*修改element ui 对话框样式修改 start*/
+      .el-dialog{
+        margin:0 !important;
+        position:absolute;
+        top:50%;
+        left:50%;
+        transform:translate(-50%,-50%);
+        /*height:600px;*/
+        max-height:calc(100% - 30px);
+        max-width:calc(100% - 30px);
+      }
+      /*修改element ui 对话框样式修改 end*/
+      
+      .selected { /*覆盖hqchart的样式*/
+        float: none;
+      }
+      .el-select-dropdown__item.selected{
+        height: auto;
+        float: none;
+        text-align: left;
+        overflow: auto;
+      }
+      .clear::after{
+        content: '';
+        width: 0;
+        height: 0;
+        display: block;
+        overflow: hidden;
+        clear: both;
+      }
+      ::-webkit-scrollbar {/*滚动条整体样式*/
+        width: 10px;     /*高宽分别对应横竖滚动条的尺寸*/
+        height: 1px;
+      }
+  
+      ::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+        border-radius: 10px;
+        /* -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2); */
+        background: #ccc;
+      }
+  
+      ::-webkit-scrollbar-track {/*滚动条里面轨道*/
+        /* -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2); */
+        border-radius: 10px;
+        background: #EDEDED;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+  <script type="text/javascript" src="js/vendor.js?eda09e34"></script><script type="text/javascript" src="js/privacyStatement.js?f3c08637"></script></body>
+</html>
