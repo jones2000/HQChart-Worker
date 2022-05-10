@@ -1,0 +1,58 @@
+{
+  "list":[
+    {
+      "Title": "策略1",
+      "Data": [
+        {
+          "Name": "VOL", 
+          "Description": "成交量", 
+          "IsMainIndex": false, 
+          "FloatPrecision": 0, 
+          "Args": [
+            {"Name": "M1", "Value": 5},
+            {"Name": "M2", "Value": 10}
+          ],
+          "Script": "VOL:VOL,VOLSTICK;\nMA1:MA(VOL,M1);\nMA2:MA(VOL,M2);"
+        },
+        {
+          "Name": "VOL2", 
+          "Description": "成交量", 
+          "IsMainIndex": false, 
+          "FloatPrecision": 0, 
+          "Args": [
+            {"Name": "M1", "Value": 5},
+            {"Name": "M2", "Value": 10}
+          ],
+          "Script": "VOL:VOL,VOLSTICK;\nMA1:MA(VOL,M1);\nMA2:MA(VOL,M2);"
+        }
+      ]
+    },
+    {
+      "Title": "策略2",
+      "Data": [
+        {
+          "Name": "VOL3", 
+          "Description": "成交量", 
+          "IsMainIndex": false, 
+          "FloatPrecision": 0, 
+          "Args": [
+            {"Name": "M1", "Value": 5},
+            {"Name": "M2", "Value": 10}
+          ],
+          "Script": "VOL:VOL,VOLSTICK;\nMA1:MA(VOL,M1);\nMA2:MA(VOL,M2);"
+        },
+        {
+          "Name": "VOL4", 
+          "Description": "成交量", 
+          "IsMainIndex": false, 
+          "FloatPrecision": 0, 
+          "Args": [
+            {"Name": "M1", "Value": 5},
+            {"Name": "M2", "Value": 10}
+          ],
+          "Script": "VOL:VOL,VOLSTICK;\nMA1:MA(VOL,M1);\nMA2:MA(VOL,M2);"
+        }
+      ]
+    }
+  ]
+}
