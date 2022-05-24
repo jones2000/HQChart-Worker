@@ -1,6 +1,9 @@
 # HQChart-Worker
 # 技术指标计算平台
-本地化的一个指标计算平台，功能包含指标编辑保存， 策略编辑保存，自选股编辑保存等功能。数据都保存在本地。指标引擎查照通达信的指标来做的。
+本地化的一个指标计算平台，功能包含指标编辑保存， 策略编辑保存，自选股编辑保存等功能。数据都保存在本地。指标引擎查照通达信的指标来做的。<br>
+使用插件<br>
+1. c++通达信指标计算引擎 https://github.com/jones2000/hqchartPy2/tree/master/HQChartPy2.Free
+2. HQChart图新库 https://github.com/jones2000/HQChart
 
 
 # 首页
