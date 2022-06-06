@@ -126,6 +126,7 @@ class Algorithm(db.Model):
     stockPool = db.Column(db.JSON,default=[],comment="股票池,最多50个，以逗号隔开")
     status = db.Column(db.Integer,comment="状态(0-测试;1-发布;2-停用)",default=0,)
     group = db.relationship("AlgorithmGroup", back_populates="algorithms")
+    desc =db.Column(db.String(512),comment="策略描述")
 
     def to_dict(self):
         return {
@@ -137,7 +138,8 @@ class Algorithm(db.Model):
             "right": self.right,
             "strategies": self.strategies,
             "stockPool": self.stockPool,
-            "status":self.status
+            "status":self.status,
+            "desc":self.desc
         }
 
 
@@ -152,6 +154,7 @@ class AlgorithmResult(db.Model):
     status = db.Column(db.Integer,comment="执行状态（0-初始；1-执行成功；2-执行失败）",)
     result = db.Column(db.JSON,comment="执行结果")
     updateTime = db.Column(db.DateTime,comment="最后执行时间")
+    algorithm = db.relationship("Algorithm")
 
     def to_dict(self):
         return {
@@ -160,6 +163,7 @@ class AlgorithmResult(db.Model):
             "ticket":self.ticket,
             "result":self.result,
             "status":self.status,
+            "desc":self.algorithm.desc,
             "updateTime":self.updateTime.strftime("%Y-%m-%d %H:%M:%S") if self.updateTime else None,
         }
 
@@ -188,19 +192,6 @@ class HqchartDataStatus(db.Model):
             "latestDataDate": self.latestDataDate,
             "loadTime": self.loadTime.strftime("%Y-%m-%d %H:%M:%S") if self.loadTime else None,
             "updateTime": self.updateTime.strftime("%Y-%m-%d %H:%M:%S") if self.updateTime else None,
-        }
-
-
-class HqChartAccountInfo(db.Model):
-    __tablename__ = 'hqchart_count_info'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, comment="ID")
-    account = db.Column(db.String(64), nullable=False, comment="账号", doc="账号")
-    password = db.Column(db.String(64), nullable=False, comment="密码")
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "account": self.account
         }
 
 

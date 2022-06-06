@@ -16,8 +16,8 @@ from hqchartPy2.core.hqchartpy2_public import RequestMixin
 from hqchartPy2.core.hqchartpy2_run import IHQChartPyRun, HQPolicyResult
 from hqchartPy2.core.hqchartpy2_systemdata import SymbolDataCache, FinanceDataCache
 from hqchartPy2.core.tools import get_current_date
-from hqchartPy2.extention import db, executor, progress_bar, DATA_FILE_TYPE_META
-from hqchartPy2.models.strategy import Strategy, StrategyArgument, StrategyGroup, HqChartAccountInfo, \
+from hqchartPy2.extention import db, executor, progress_bar, DATA_FILE_TYPE_META, FINANCE_META_INFO, CAPITAL_META_INFO
+from hqchartPy2.models.strategy import Strategy, StrategyArgument, StrategyGroup, \
     HqchartDataStatus, Algorithm, AlgorithmGroup, StockGroup, Stock, AlgorithmResult
 
 
@@ -251,7 +251,6 @@ class DataController(RequestMixin):
     数据设置类API
     """
 
-
     def set_cache_path(self,dataType,dataPath):
         # 设置数据缓存路径
         if DataFileType.SYMBOLE_FILE_TYPE.value == dataType:
@@ -304,7 +303,7 @@ class DataController(RequestMixin):
         for item in strategyGroup_list:
             _item = item.to_dict()
             progress = progress_bar[DataFileType(item.type)]
-            _item["percent"] = progress.get("percent")
+            _item["percent"] = round(progress.get("percent"))
             _item["cur"] = progress.get("cur")
             _item["total"] = progress.get("total")
             _item["taskname"] = progress.get("taskname")
@@ -375,41 +374,59 @@ class DataController(RequestMixin):
                 "msg": "error,数据正在同步中，请勿重复提交"
             }
 
+    def __load_data_task(self, dataType, app):
+        with app.app_context():
+            try:
+                progress_bar[DataFileType(dataType)]["percent"] = 0
+                progress_bar[DataFileType(dataType)]["cur"] = 0
+                progress_bar[DataFileType(dataType)]["total"] = 0
+                progress_bar[DataFileType(dataType)]["taskname"] = "开始加载数据..."
+                dataStatusObj = HqchartDataStatus.query.filter_by(type=dataType).first()
+                if dataType == DataFileType.SYMBOLE_FILE_TYPE.value:
+                    SymbolDataCache.LoadCache()
+                if dataType == DataFileType.MIN_KLINE_FILE_TYPE.value:
+                    MinuteKLineCache.LoadCache()
+                if dataType == DataFileType.DAY_KLINE_FILE_TYPE.value:
+                    KLineCache.LoadCache()
+                if dataType in [DataFileType.CAPITAL_FILE_TYPE.value,DataFileType.FINANCE_FILE_TYPE.value]:
+                    FinanceDataCache.LoadCache(DataFileType(dataType))
+                progress_bar[DataFileType(dataType)]["percent"] = 100
+                progress_bar[DataFileType(dataType)]["loadStatus"] = 2
+                progress_bar[DataFileType(dataType)]["isCache"] = True
+                dataStatusObj.loadTime = datetime.datetime.now()
+                db.session.add(dataStatusObj)
+                db.session.commit()
+            except Exception as e:
+                logging.error(msg=str(e))
+                progress_bar[DataFileType(dataType)]["loadStatus"] = 3
+
     def load_data(self):
         """
         数据加载
         :return:
         """
         dataType = self.request_body.get("type")  # 数据类型
-        dataStatusObj = HqchartDataStatus.query.filter_by(type=dataType).first()
+
         status = progress_bar[DataFileType(dataType)]["loadStatus"]
+        syncStatus = progress_bar[DataFileType(dataType)]["syncStatus"]
+        if syncStatus == 1:
+            return {
+                "code": -1,
+                "msg": "error,数据正在同步中，同步完毕后再加载"
+            }
         if status is None or status != 1:
             progress_bar[DataFileType(dataType)]["loadStatus"] = 1
-            if dataType == DataFileType.SYMBOLE_FILE_TYPE.value:
-                SymbolDataCache.LoadCache()
-                progress_bar[DataFileType.SYMBOLE_FILE_TYPE]["isCache"] = True
-            if dataType == DataFileType.MIN_KLINE_FILE_TYPE.value:
-                MinuteKLineCache.LoadCache()
-                progress_bar[DataFileType.MIN_KLINE_FILE_TYPE]["isCache"] = True
-            if dataType == DataFileType.DAY_KLINE_FILE_TYPE.value:
-                KLineCache.LoadCache()
-                progress_bar[DataFileType.DAY_KLINE_FILE_TYPE]["isCache"] = True
-            if dataType in [DataFileType.CAPITAL_FILE_TYPE.value,DataFileType.FINANCE_FILE_TYPE.value]:
-                FinanceDataCache.LoadCache(DataFileType(dataType))
-                progress_bar[DataFileType(dataType)]["isCache"] = True
-            progress_bar[DataFileType(dataType)]["loadStatus"] = 2
-            dataStatusObj.loadTime = datetime.datetime.now()
-            db.session.add(dataStatusObj)
-            db.session.commit()
+            app = current_app._get_current_object()
+            executor.submit(self.__load_data_task,dataType,app)
             return {
                 "code": 200,
-                "msg": "数据加载成功",
-                "loadStatus": 2
+                "msg": "数据加载请求提交成功,数据正在加载中",
+                "loadStatus": 1
             }
         else:
             return {
                 "code": 200,
-                "msg": "error,数据正在同步中，请勿重复提交"
+                "msg": "error,数据正在加载中，请勿重复提交"
             }
 
 
@@ -440,7 +457,8 @@ class AlgorithmController(RequestMixin):
         algorithmObj.right = requestData.get("right",0)
         algorithmObj.period = requestData["period"]
         algorithmObj.strategies = requestData["strategies"]
-        algorithmObj.stockPool = requestData.get("stockPool", "")
+        algorithmObj.stockPool = requestData.get("stockPool", "[]")
+        algorithmObj.desc = requestData.get("desc", "")
         db.session.add(algorithmObj)
         db.session.commit()
         return {
@@ -472,7 +490,8 @@ class AlgorithmController(RequestMixin):
             algorithmObj.stockPool = requestData.get("stockPool", [])
         if "status" in requestData:
             algorithmObj.status = requestData.get("status")
-
+        if "desc" in requestData:
+            algorithmObj.desc = requestData.get("desc")
         db.session.add(algorithmObj)
         db.session.commit()
         return {
@@ -737,10 +756,8 @@ class PolicyRunner(RequestMixin,IHQChartPyRun):
             progress_bar["RUNALLPOLICY"]["percent"] = 0
             progress_bar["RUNALLPOLICY"]["taskname"] = "开始执行策略"
             m_HQData = HQChartData()
-            logging.info(msg="======================={},{}".format(len(query_set),query_set))
             for policyObj in query_set:
                 try:
-                    logging.info(msg="================================开始执行策略：{}".format(policyObj["name"]))
                     progress_bar["RUNALLPOLICY"]["taskname"] = "开始执行策略:{}".format(policyObj["name"])
                     progress_bar["RUNALLPOLICY"]["cur"] += 1
                     policyConfig, policyVarList = self.get_policy_config(policyObj=policyObj)
@@ -749,7 +766,6 @@ class PolicyRunner(RequestMixin,IHQChartPyRun):
                     #写数据库
                     algorithmResultObj = AlgorithmResult.query.filter_by(algorithmId=policyObj["id"]).first()
                     if algorithmResultObj is None:
-                        logging.info(msg="======================================")
                         algorithmResultObj = AlgorithmResult()
                     algorithmResultObj.status = 2
                     algorithmResultObj.algorithmId = policyObj["id"]
@@ -1055,4 +1071,61 @@ class StockInfoController(RequestMixin):
             "code": 200,
             "data": data_list,
             "metainfo":metainfo
+        }
+
+    def get_symbol_list(self):
+        """
+        码表
+        :return:
+        """
+        data_list = SymbolDataCache.get_symbol_list()
+        return {
+            "code":200,
+            "data":data_list,
+            "count":len(data_list)
+        }
+
+
+class FinanceDataController(RequestMixin):
+    """
+    财务数据和股本数据相关API
+    """
+    def get_finance(self):
+        """
+        键盘精灵
+        :return:
+        """
+        request_data = self.request_body
+        symbol = request_data.get("symbol")
+        data = FinanceDataCache.GetDataByType(DataFileType.FINANCE_FILE_TYPE,symbol)
+        return {
+            "code": 200,
+            "data": data,
+            "metainfo":FINANCE_META_INFO
+        }
+
+    def get_capital(self):
+        """
+        股本数据
+        :return:
+        """
+        request_data = self.request_body
+        symbol = request_data.get("symbol")
+        data = FinanceDataCache.GetDataByType(DataFileType.CAPITAL_FILE_TYPE,symbol)
+        return {
+            "code": 200,
+            "data": data,
+            "metainfo":CAPITAL_META_INFO
+        }
+
+    def get_symbol_list(self):
+        """
+        码表
+        :return:
+        """
+        data_list = SymbolDataCache.get_symbol_list()
+        return {
+            "code":200,
+            "data":data_list,
+            "count":len(data_list)
         }

@@ -43,6 +43,7 @@ def init_data():
         if item.type == DataFileType.SYMBOLE_FILE_TYPE.value:
             SymbolDataCache.SetCachePath(item.dataPath)
             SymbolDataCache.LoadCache()
+
         if item.type in [DataFileType.FINANCE_FILE_TYPE.value,DataFileType.CAPITAL_FILE_TYPE.value]:
             FinanceDataCache.SetCachePath(DataFileType(item.type),item.dataPath)
             FinanceDataCache.LoadCache(DataFileType(item.type))

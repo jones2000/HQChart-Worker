@@ -21,6 +21,7 @@ def userAgreement():
     """
     return render_template("userAgreement.html")
 
+
 @hqchart_front.route("/privacyStatement.html", methods=["GET"])
 def privacyStatement():
     """
@@ -29,3 +30,10 @@ def privacyStatement():
     """
     return render_template("privacyStatement.html")
 
+@hqchart_front.route("/detailData.html", methods=["GET"])
+def detailData():
+    """
+    首页
+    :return:
+    """
+    return render_template("detailData.html")

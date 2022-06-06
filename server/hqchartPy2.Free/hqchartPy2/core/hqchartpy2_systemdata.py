@@ -133,6 +133,17 @@ class SymbolDataCache(object):
             result[item[SYMBOL_DATA_INDEX.SYMBOL_ID.value]] = item[SYMBOL_DATA_INDEX.NAME_ID.value]
         return result
 
+    @staticmethod
+    def get_symbol_list():
+        """
+        获取码表,
+        :return:dict.eg:{"000001.sz":"平安银行"}
+        """
+        m_Cache = SymbolDataCache.m_Cache
+        data_list = []
+        for item in m_Cache["symbollist"]:
+            data_list.append({"symbol":item[SYMBOL_DATA_INDEX.SYMBOL_ID.value],"name":item[SYMBOL_DATA_INDEX.NAME_ID.value]})
+        return data_list
 
 class FinanceDataCache(object):
     # 缓存财务数据和股本数据

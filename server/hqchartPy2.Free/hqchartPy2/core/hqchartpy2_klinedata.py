@@ -14,6 +14,8 @@ import json
 import datetime
 from enum import Enum, auto
 
+from hqchartPy2.extention import progress_bar, DataFileType
+
 
 class DAY_KLINE_DATA_INDEX(Enum):
     DATE_ID = 0   #日期
@@ -44,17 +46,26 @@ class KLineCache(object):
         KLineCache.m_bLoadFinished = False
         path = KLineCache.m_CachePath
         log = "[KLineCache::LoadCache] start load day kline data. path='{0}' .....".format(path)
-        print(log)
-
+        logging.info(msg=log)
         aryFiles = os.listdir(path)
+        progress_bar[DataFileType.DAY_KLINE_FILE_TYPE]["taskname"] = "开始加载数据文件{cur}/{ttl}".format(cur=0,ttl=len(aryFiles))
+        progress_bar[DataFileType.DAY_KLINE_FILE_TYPE]["total"] = len(aryFiles)
         for item in aryFiles:
+            progress_bar[DataFileType.DAY_KLINE_FILE_TYPE]["cur"] += 1
+            progress_bar[DataFileType.DAY_KLINE_FILE_TYPE]["taskname"] = "加载数据文件:{cur}/{ttl}".format(cur=progress_bar[DataFileType.DAY_KLINE_FILE_TYPE]["cur"],
+                                                                                                      ttl=len(aryFiles))
+            progress_bar[DataFileType.DAY_KLINE_FILE_TYPE]["percent"] = round(
+                progress_bar[DataFileType.DAY_KLINE_FILE_TYPE]["cur"] * 1.0 / progress_bar[DataFileType.DAY_KLINE_FILE_TYPE]["total"] * 1.0, 2) * 100
+
             strFile = path + "/" + item
             if os.path.isdir(strFile) or item == 'metainfo.json' or not str(item).endswith("json"):
                 continue
             KLineCache.load_kline_data_by_symbol(symbol_filename=strFile)
+        progress_bar[DataFileType.DAY_KLINE_FILE_TYPE]["percent"] = 100
         KLineCache.m_bLoadFinished = True
         log = "[KLineCache::LoadCache] finish load day kline data. count={0}".format(len(KLineCache.m_Cache))
-        print(log)
+        logging.info(msg=log)
+        return True
 
     @staticmethod
     def load_kline_data_by_symbol(symbol_filename):
@@ -207,7 +218,7 @@ class KLineCache(object):
                 result[index] = KLineCache.CopyRightKItem(kItem, seed)
                 yClose = kItem[DAY_KLINE_DATA_INDEX.YCLOSE_ID.value]
 
-        elif right == 2:
+        elif right in (2,3):
             index = 0
             seed = 1
             kItem = aryData[index]
@@ -306,7 +317,7 @@ class KLineCache(object):
 
         return result
 
-    # right: 1=前复权 2=后复权 0=不复权
+    # right: 1=前复权 2=后复权-简单 3=后复权-完成 0=不复权
     # period: 0=日 1=周 2=月 3=年 9=季 21=双周 22=半年
     def GetDayKLine(symbol, period=0, right=0, startDate=None, endDate=None, nCalculateCount=None):
         srcKData = KLineCache.GetDayKLineCache(symbol)
@@ -326,13 +337,13 @@ class KLineCache(object):
 
         # 指定计算个数
         if (nCalculateCount != None and nCalculateCount > 0 and dataCount > nCalculateCount):
-            if (right == 0 or right == 1):  # 截取数据
+            if (right == 0 or right == 1 or right == 2):  # 截取数据
                 aryData = srcKData["data"][-nCalculateCount:]
                 if (period == 0 and right == 0):
                     kData = {'data': aryData}
                     KLineCache.ConvertToHQChartData(kData, result)
                     return result
-                if (right == 1):
+                if (right == 1 or right == 2 ):
                     aryData = KLineCache.CalculateRight(aryData, right)
 
                 # 计算周期
@@ -344,7 +355,7 @@ class KLineCache(object):
                 KLineCache.ConvertToHQChartData(kData, result)
                 return result
 
-            if (right == 2):  # 后复权 先算复权数据 再截取数据
+            if (right == 3):  # 后复权-完成 先算复权数据 再截取数据
                 kData = {}
                 aryData = srcKData["data"]
                 aryData = KLineCache.CalculateRight(aryData, right)
@@ -368,16 +379,19 @@ class KLineCache(object):
         kData = {}
         aryData = srcKData["data"]
         # 计算复权
-        if (right == 1 or right == 2):
-            aryData = KLineCache.CalculateRight(aryData, right)
+        if (right in (1,2,3) ):
+            if(right == 1 or right == 2): #前复权,或者后复权-简单,先过滤数据，后计算复权
+                aryData = KLineCache.FilterByDate(aryData,startDate,endDate)
+                aryData = KLineCache.CalculateRight(aryData, right)
+            else:
+                aryData = KLineCache.CalculateRight(aryData, right)
+                #计算完后复权后，再截取数据
+                aryData = KLineCache.FilterByDate(aryData, startDate, endDate)
 
         # 计算周期
         if (period == 1 or period == 2 or period == 3 or period == 9 or period == 21 or period == 22):
             aryData = KLineCache.CalculatePeriod(aryData, period)
 
-        # 根据日期进行过滤
-        aryData = KLineCache.FilterByDate(aryData, startDate, endDate)
-        print("---------------------------".format(aryData))
         kData['data'] = aryData
         KLineCache.ConvertToHQChartData(kData, result)
         return result

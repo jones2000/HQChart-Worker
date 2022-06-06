@@ -18,6 +18,8 @@ from enum import Enum, auto
 
 from sqlalchemy import true
 
+from hqchartPy2.extention import progress_bar, DataFileType
+
 
 class MINUTE_KLINE_DATA_INDEX(Enum):
     DATE_ID = 0
@@ -50,12 +52,22 @@ class MinuteKLineCache(object):
         log = "[MinuteKLineCache::LoadCache] start load day kline data. path='{0}' .....".format(path)
         print(log)
         aryFiles = os.listdir(path)
+        progress_bar[DataFileType.MIN_KLINE_FILE_TYPE]["taskname"] = "开始加载数据文件{cur}/{ttl}".format(cur=0,ttl=len(aryFiles))
+        progress_bar[DataFileType.MIN_KLINE_FILE_TYPE]["total"] = len(aryFiles)
+        progress_bar[DataFileType.MIN_KLINE_FILE_TYPE]["percent"] = 0
         for item in aryFiles:
+            progress_bar[DataFileType.MIN_KLINE_FILE_TYPE]["taskname"] = "加载数据文件:{cur}/{ttl}".format(cur=progress_bar[DataFileType.MIN_KLINE_FILE_TYPE]["cur"],
+                                                                                                      ttl=len(aryFiles))
+            progress_bar[DataFileType.MIN_KLINE_FILE_TYPE]["cur"] += 1
+            progress_bar[DataFileType.MIN_KLINE_FILE_TYPE]["percent"] = round(
+                progress_bar[DataFileType.MIN_KLINE_FILE_TYPE]["cur"] * 1.0 / progress_bar[DataFileType.MIN_KLINE_FILE_TYPE]["total"] * 1.0, 2) * 100
+
             strFile = path + "/" + item
             if os.path.isdir(strFile) or item == 'metainfo.json' or not str(item).endswith("json"):
                 continue
             MinuteKLineCache.load_minute_kline_data_by_symbol(symbol_filename=strFile)
         MinuteKLineCache.m_bLoadFinished = True
+        progress_bar[DataFileType.DAY_KLINE_FILE_TYPE]["percent"] = 100
         log = "[MinuteKLineCache::LoadCache] finish load day kline data. count={0}".format(
             len(MinuteKLineCache.m_Cache))
         logging.info(msg=log)

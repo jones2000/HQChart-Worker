@@ -10,9 +10,8 @@ db = SQLAlchemy()
 executor = ThreadPoolExecutor(4)
 
 #默认服务端口
-
 service_port = 8712
-
+python_version = 1.2
 @unique
 class DataFileType(Enum):
     """
@@ -39,51 +38,46 @@ DATA_FILE_TYPE_META = {
 }
 
 # 最新一期财务数据字典的Key值
-"""
-FINANCE(9) 资产负债率%
-即:(总资产-净资产-少数股东权益)/总资产*100
-FINANCE(10) 总资产
-FINANCE(11) 流动资产
-FINANCE(12) 固定资产
-FINANCE(13) 无形资产
-FINANCE(15) 流动负债
-FINANCE(16) 少数股东权益
-FINANCE(17) 资本公积金
-FINANCE(18) 每股公积金
-FINANCE(19) 股东权益 ( 净资产 )
-FINANCE(20) 营业收入
-FINANCE(21) 营业成本
-FINANCE(22) 应收帐款
-FINANCE(23) 营业利润
-FINANCE(24) 投资收益
-FINANCE(25) 经营现金流量
-FINANCE(26) 总现金流量
-FINANCE(27) 存货
-FINANCE(28) 利润总额
-FINANCE(29) 税后利润
-FINANCE(30) 净利润
-FINANCE(31) 未分配利润
-FINANCE(32) 每股未分配利润
-FINANCE(33) 每股收益 ( 全年折算 )
-每股收益(折算为全年收益),对于沪深品种有效
-FINANCE(34) 每股净资产
-FINANCE(35) 季报中调整后的每股净资产
-FINANCE(36) 股东权益比
-FINANCE(37) 第几季报
-第几期季度报告,1为一季报,2为中报,3为三季报,4为年报
-FINANCE(38) 每股收益(最近一期季报)
-FINANCE(40) 流通市值
-FINANCE(41) AB股总市值
-FINANCE(42) 上市的天数
-FINANCE(43) 利润同比%
-净利润同比增长率
-FINANCE(44) 收入同比%
-主营收入同比增长率
-FINANCE(45) 股息率%
-FINANCE(55) 研发费用,上市公司最近一期财报数据
-FINANCE(57) 货币资金,上市公司最近一期财报数据
-FINANCE(58) 预收账款,上市公司最近一期财报数据
-"""
+FINANCE_META_INFO={
+"FINANCE(9)": "资产负债率%",
+"FINANCE(10)": "总资产",
+"FINANCE(11)": "流动资产",
+"FINANCE(12)":"固定资产",
+"FINANCE(13)":"无形资产",
+"FINANCE(15)":"流动负债",
+"FINANCE(16)":"少数股东权益",
+"FINANCE(17)":"资本公积金",
+"FINANCE(18)" :"每股公积金",
+"FINANCE(19)" :"股东权益(净资产)",
+"FINANCE(20)" :"营业收入",
+"FINANCE(21)" :"营业成本",
+"FINANCE(22)" :"应收帐款",
+"FINANCE(23)" :"营业利润",
+"FINANCE(24)" :"投资收益",
+"FINANCE(25)" :"经营现金流量",
+"FINANCE(26)" :"总现金流量",
+"FINANCE(27)" :"存货",
+"FINANCE(28)" :"利润总额",
+"FINANCE(29)" :"税后利润",
+"FINANCE(30)" :"净利润",
+"FINANCE(31)" :"未分配利润",
+"FINANCE(32)" :"每股未分配利润",
+"FINANCE(33)" :"每股收益",
+"FINANCE(34)" :"每股净资产",
+"FINANCE(35)" :"季报中调整后的每股净资产",
+"FINANCE(36)" :"股东权益比",
+"FINANCE(37)" :"第几季报",
+"FINANCE(38)" :"每股收益",
+"FINANCE(40)" :"流通市值",
+"FINANCE(41)" :"AB股总市值",
+"FINANCE(42)" :"上市的天数",
+"FINANCE(43)" :"利润同比%",
+"FINANCE(44)" :"主营收入同比增长率",
+"FINANCE(45)":"股息率%",
+"FINANCE(55)":"研发费用",
+"FINANCE(57)" :"货币资金",
+"FINANCE(58)":"预收账款",
+}
 LATEST_FINACE_DICT_KEYS = [
     'FINANCE(9)', 'FINANCE(10)', 'FINANCE(11)', 'FINANCE(12)', 'FINANCE(13)', 'FINANCE(14)', 'FINANCE(15)',
     'FINANCE(16)', 'FINANCE(17)', 'FINANCE(18)', 'FINANCE(19)', 'FINANCE(20)', 'FINANCE(21)', 'FINANCE(22)',
@@ -95,11 +89,13 @@ LATEST_FINACE_DICT_KEYS = [
 
 """
 股本数据
-CAPITAL 当前流通股本
-TOTALCAPITAL 当前总股本
-FINANCE(1) 总股本（数组，上市以来所有）
-FINANCE(7) 流通股本（数组，上市以来所有）
 """
+CAPITAL_META_INFO={
+    "CAPITAL":"当前流通股本",
+    "TOTALCAPITAL":"当前总股本",
+    "FINANCE(1)":"总股本",
+    "FINANCE(7)":"流通股本"
+}
 ALL_CAPITAL_DICT_KEYS = [
     'FINANCE(1)', 'FINANCE(7)'
 ]

@@ -8,9 +8,9 @@ from hqchartPy2.core.hqchartpy2_run import HQChartPySimpleRun, HQChartPyMultiRun
 from hqchartPy2.core.hqchartpy2_hqapidata import DayKLineController, MinuteKLineController
 from hqchartPy2.core.hqchartpy2_strategyapi import StrategyController, StrategyGroupController, \
     DataController, AlgorithmController, AlgorithmGroupController, \
-    StockGroupController, StockInfoController, PolicyRunner
+    StockGroupController, StockInfoController, PolicyRunner, FinanceDataController
 
-from hqchartPy2.extention import service_port
+from hqchartPy2.extention import service_port,python_version
 
 hqchart_api = Blueprint("api", __name__, url_prefix="/api", template_folder="templates")
 CORS(hqchart_api, supports_credentials=True)  # 跨域
@@ -29,6 +29,7 @@ def version():
     ret_data = {
         "version": FastHQChart.GetVersion(),
         "plateVersion": plate_version,
+        "pythonVersion":python_version,
         "host": ip,
         "port": service_port,
     }
@@ -399,6 +400,27 @@ def search_stock():
 def sys_blocklist():
     controller = StockInfoController(request=request)
     responseData = controller.get_sys_block_list()
+    return jsonify(responseData)
+
+# 获取码表信息
+@hqchart_api.route('/stock/symbollist', methods=["GET"])
+def stock_symbollist():
+    controller = StockInfoController(request=request)
+    responseData = controller.get_symbol_list()
+    return jsonify(responseData)
+
+# 获取股票财务数据
+@hqchart_api.route('/stock/finance', methods=["GET"])
+def stock_finance():
+    controller = FinanceDataController(request=request)
+    responseData = controller.get_finance()
+    return jsonify(responseData)
+
+# 获取股票股本数据
+@hqchart_api.route('/stock/capital', methods=["GET"])
+def stock_capital():
+    controller = FinanceDataController(request=request)
+    responseData = controller.get_capital()
     return jsonify(responseData)
 
 
